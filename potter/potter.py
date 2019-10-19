@@ -18,18 +18,32 @@ def removeBooks(groupedBooks, setOfBooks):
     groupedBooks[book] = groupedBooks[book][1:]
   return removeEmptyValues(groupedBooks)
 
-def calcPrice(setOfBooks):
+def priceFor(setOfBooks):
   numBooks = len(setOfBooks)
   fullPrice = numBooks * 8
   pc_discount = PC_DISCOUNTS[numBooks]
   discount = fullPrice / 100 * pc_discount
   return fullPrice - discount
 
-# A: [A, A]
-# B: [B, B]
-# C: [C, C]
-# D: [D]
-# E: [E]
+def filterDict(d, pred):
+  newDict = dict()
+  for (k, v) in d.items():
+    if pred(k, v):
+      newDict[k] = v
+  return newDict
+
+def chooseSetOfBooks(groupedBooks):
+  if len(groupedBooks) < 5:
+    return groupedBooks.keys()
+  else:
+    items1 = filterDict(groupedBooks, lambda _, v: len(v) >= 2)
+    keys1 = list(items1.keys())[:3]
+    if len(keys1) < 3:
+      return groupedBooks.keys()
+    else:
+      items2 = filterDict(groupedBooks, lambda k, _: not k in keys1)
+      keys2 = items2.keys()
+      return keys1 + list(keys2)[:1]
 
 def potter(books):
   groupedBooks = defaultdict(list)
@@ -37,13 +51,7 @@ def potter(books):
     groupedBooks[book].append(book)
   total = 0
   while groupedBooks:
-    setOfBooks = groupedBooks.keys()
-    total = total + calcPrice(setOfBooks)
+    setOfBooks = chooseSetOfBooks(groupedBooks)
+    total = total + priceFor(setOfBooks)
     groupedBooks = removeBooks(groupedBooks, setOfBooks)
-    # if len group is < 5 then remove set of books adding discounted price to total
-    # if there are 2 groups of 4 available then remove a set of 4 else remove a set of 5
-    #    (the set of 4 that is removed needs to include the 3 items with values of length >= 3)
-    # to check for 2 groups of 4 available:
-    #   we know there is a group of 5 due to earlier check
-    #   for there to be 2 groups of 4, there needs to be 3 items with values of length >= 2
   return total
