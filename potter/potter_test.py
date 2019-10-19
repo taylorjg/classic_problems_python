@@ -25,5 +25,8 @@ class TestPotter:
   def test_five_books_different(self):
     assert potter('ABCDE') == 5 * 8 * 0.75
 
-  def test_two_fours_is_better_than_one_five_and_one_three(self):
+  def test_edge_case_1(self):
     assert potter('ABCDEABC') == 2 * (4 * 8 * 0.8)
+
+  def test_edge_case_2(self):
+    assert potter('ABCDEABCDEABCDEABCDEABC') == 3 * (5 * 8 * 0.75) + 2 * (4 * 8 * 0.8)
