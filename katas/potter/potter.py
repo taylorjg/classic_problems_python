@@ -38,7 +38,7 @@ def choose_books(grouped_books):
     return length_one_keys[:1] + length_two_keys
 
 
-def potter(books):
+def price_books(books):
     grouped_books = defaultdict(list)
     for book in books:
         grouped_books[book].append(book)
