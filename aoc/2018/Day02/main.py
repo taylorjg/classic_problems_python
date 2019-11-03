@@ -1,4 +1,4 @@
-from itertools import groupby
+from itertools import groupby, product
 
 
 def part1(box_ids):
@@ -14,12 +14,11 @@ def part1(box_ids):
 
 
 def part2(box_ids):
-    for box_id_1 in box_ids:
-        for box_id_2 in box_ids:
-            matching_chars = [c for i, c in enumerate(box_id_1) if c == box_id_2[i]]
-            if len(matching_chars) == len(box_id_1) - 1:
-                print(f"part 2 answer: {''.join(matching_chars)}")
-                return
+    for box_id_1, box_id_2 in product(box_ids, box_ids):
+        matching_chars = [c for i, c in enumerate(box_id_1) if c == box_id_2[i]]
+        if len(matching_chars) == len(box_id_1) - 1:
+            print(f"part 2 answer: {''.join(matching_chars)}")
+            return
 
 
 if __name__ == "__main__":
