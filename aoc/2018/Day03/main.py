@@ -17,26 +17,26 @@ def get_claim_coords(claim):
 
 
 def make_pos_dict(claims):
-    d = defaultdict(list)
+    pos_dict = defaultdict(list)
     for claim in claims:
         for pos in get_claim_coords(claim):
             claim_id = claim[0]
-            d[pos].append(claim_id)
-    return d
+            pos_dict[pos].append(claim_id)
+    return pos_dict
 
 
 def part1(claims):
-    d = make_pos_dict(claims)
-    total_overlap = sum([1 for value in d.values() if len(value) > 1])
+    pos_dict = make_pos_dict(claims)
+    total_overlap = sum([1 for v in pos_dict.values() if len(v) > 1])
     print(f"part 1 answer: {total_overlap}")
 
 
 def part2(claims):
-    d = make_pos_dict(claims)
-    values = d.values()
+    pos_dict = make_pos_dict(claims)
     for claim in claims:
-        claim_id = claim[0]
-        if all([len(v) == 1 for v in values if claim_id in v]):
+        vs = [pos_dict[pos] for pos in get_claim_coords(claim)]
+        if all([len(v) == 1 for v in vs]):
+            claim_id = claim[0]
             print(f"part 2 answer: {claim_id}")
             break
 
