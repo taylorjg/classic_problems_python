@@ -1,8 +1,8 @@
 import re
 
 
-def find_reacting_units(polymer):
-    for pos in range(len(polymer) - 1):
+def find_reacting_units(polymer, start):
+    for pos in range(start, len(polymer) - 1):
         code1 = ord(polymer[pos])
         code2 = ord(polymer[pos + 1])
         if abs(code1 - code2) == 32: return pos
@@ -10,10 +10,12 @@ def find_reacting_units(polymer):
 
 
 def react_polymer(polymer):
+    start = 0
     while True:
-        pos = find_reacting_units(polymer)
+        pos = find_reacting_units(polymer, start)
         if pos is None: break
         polymer = polymer[:pos] + polymer[pos + 2:]
+        start = max(0, pos - 1)
     return polymer
 
 
