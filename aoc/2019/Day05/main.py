@@ -48,52 +48,34 @@ def execute_output_instruction(outputs, program, pos, modes):
     return pos + 2
 
 
-def execute_jump_if_true_instruction(program, pos, modes):
+def execute_jump_instruction(op, program, pos, modes):
     param1 = program[pos + 1]
     param2 = program[pos + 2]
     a = param1 if modes[0] else program[param1]
     b = param2 if modes[1] else program[param2]
-    return b if a != 0 else pos + 3
+    return b if op(a) else pos + 3
 
 
-def execute_jump_if_false_instruction(program, pos, modes):
-    param1 = program[pos + 1]
-    param2 = program[pos + 2]
-    a = param1 if modes[0] else program[param1]
-    b = param2 if modes[1] else program[param2]
-    return b if a == 0 else pos + 3
-
-
-def execute_less_than_instruction(program, pos, modes):
+def execute_comparison_instruction(op, program, pos, modes):
     param1 = program[pos + 1]
     param2 = program[pos + 2]
     param3 = program[pos + 3]
     a = param1 if modes[0] else program[param1]
     b = param2 if modes[1] else program[param2]
-    program[param3] = 1 if a < b else 0
-    return pos + 4
-
-
-def execute_equals_instruction(program, pos, modes):
-    param1 = program[pos + 1]
-    param2 = program[pos + 2]
-    param3 = program[pos + 3]
-    a = param1 if modes[0] else program[param1]
-    b = param2 if modes[1] else program[param2]
-    program[param3] = 1 if a == b else 0
+    program[param3] = op(a, b)
     return pos + 4
 
 
 def make_intcode_dict(input, outputs):
     return {
-        Opcodes.ADD: partial(execute_arithmetic_instruction, lambda x, y: x + y),
-        Opcodes.MULTIPLY: partial(execute_arithmetic_instruction, lambda x, y: x * y),
+        Opcodes.ADD: partial(execute_arithmetic_instruction, lambda a, b: a + b),
+        Opcodes.MULTIPLY: partial(execute_arithmetic_instruction, lambda a, b: a * b),
         Opcodes.SAVE: partial(execute_save_instruction, input),
         Opcodes.OUTPUT: partial(execute_output_instruction, outputs),
-        Opcodes.JUMP_IF_TRUE: execute_jump_if_true_instruction,
-        Opcodes.JUMP_IF_FALSE: execute_jump_if_false_instruction,
-        Opcodes.LESS_THAN: execute_less_than_instruction,
-        Opcodes.EQUALS: execute_equals_instruction
+        Opcodes.JUMP_IF_TRUE: partial(execute_jump_instruction, lambda a: a),
+        Opcodes.JUMP_IF_FALSE: partial(execute_jump_instruction, lambda a: not a),
+        Opcodes.LESS_THAN: partial(execute_comparison_instruction, lambda a, b: a < b),
+        Opcodes.EQUALS: partial(execute_comparison_instruction, lambda a, b: a == b)
     }
 
 
