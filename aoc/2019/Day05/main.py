@@ -24,13 +24,16 @@ def decode_instruction(instruction):
     return opcode, modes
 
 
+def get_param(program, pos, modes, param_num):
+    value = program[pos + param_num]
+    return value if modes[param_num - 1] else program[value]
+
+
 def execute_arithmetic_instruction(op, program, pos, modes):
-    param1 = program[pos + 1]
-    param2 = program[pos + 2]
-    param3 = program[pos + 3]
-    a = param1 if modes[0] else program[param1]
-    b = param2 if modes[1] else program[param2]
+    a = get_param(program, pos, modes, 1)
+    b = get_param(program, pos, modes, 2)
     c = op(a, b)
+    param3 = program[pos + 3]
     program[param3] = c
     return pos + 4
 
@@ -42,26 +45,21 @@ def execute_save_instruction(input, program, pos, _):
 
 
 def execute_output_instruction(outputs, program, pos, modes):
-    param1 = program[pos + 1]
-    output = param1 if modes[0] else program[param1]
+    output = get_param(program, pos, modes, 1)
     outputs.append(output)
     return pos + 2
 
 
 def execute_jump_instruction(op, program, pos, modes):
-    param1 = program[pos + 1]
-    param2 = program[pos + 2]
-    a = param1 if modes[0] else program[param1]
-    b = param2 if modes[1] else program[param2]
+    a = get_param(program, pos, modes, 1)
+    b = get_param(program, pos, modes, 2)
     return b if op(a) else pos + 3
 
 
 def execute_comparison_instruction(op, program, pos, modes):
-    param1 = program[pos + 1]
-    param2 = program[pos + 2]
+    a = get_param(program, pos, modes, 1)
+    b = get_param(program, pos, modes, 2)
     param3 = program[pos + 3]
-    a = param1 if modes[0] else program[param1]
-    b = param2 if modes[1] else program[param2]
     program[param3] = op(a, b)
     return pos + 4
 
