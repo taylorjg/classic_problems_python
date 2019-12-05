@@ -7,6 +7,10 @@ class Opcodes(Enum):
     MULTIPLY = 2
     SAVE = 3
     OUTPUT = 4
+    JUMP_IF_TRUE = 5
+    JUMP_IF_FALSE = 6
+    LESS_THAN = 7
+    EQUALS = 8
     HALT = 99
 
 
@@ -44,12 +48,52 @@ def execute_output_instruction(outputs, program, pos, modes):
     return pos + 2
 
 
+def execute_jump_if_true_instruction(program, pos, modes):
+    param1 = program[pos + 1]
+    param2 = program[pos + 2]
+    a = param1 if modes[0] else program[param1]
+    b = param2 if modes[1] else program[param2]
+    return b if a != 0 else pos + 3
+
+
+def execute_jump_if_false_instruction(program, pos, modes):
+    param1 = program[pos + 1]
+    param2 = program[pos + 2]
+    a = param1 if modes[0] else program[param1]
+    b = param2 if modes[1] else program[param2]
+    return b if a == 0 else pos + 3
+
+
+def execute_less_than_instruction(program, pos, modes):
+    param1 = program[pos + 1]
+    param2 = program[pos + 2]
+    param3 = program[pos + 3]
+    a = param1 if modes[0] else program[param1]
+    b = param2 if modes[1] else program[param2]
+    program[param3] = 1 if a < b else 0
+    return pos + 4
+
+
+def execute_equals_instruction(program, pos, modes):
+    param1 = program[pos + 1]
+    param2 = program[pos + 2]
+    param3 = program[pos + 3]
+    a = param1 if modes[0] else program[param1]
+    b = param2 if modes[1] else program[param2]
+    program[param3] = 1 if a == b else 0
+    return pos + 4
+
+
 def make_intcode_dict(input, outputs):
     return {
         Opcodes.ADD: partial(execute_arithmetic_instruction, lambda x, y: x + y),
         Opcodes.MULTIPLY: partial(execute_arithmetic_instruction, lambda x, y: x * y),
         Opcodes.SAVE: partial(execute_save_instruction, input),
-        Opcodes.OUTPUT: partial(execute_output_instruction, outputs)
+        Opcodes.OUTPUT: partial(execute_output_instruction, outputs),
+        Opcodes.JUMP_IF_TRUE: execute_jump_if_true_instruction,
+        Opcodes.JUMP_IF_FALSE: execute_jump_if_false_instruction,
+        Opcodes.LESS_THAN: execute_less_than_instruction,
+        Opcodes.EQUALS: execute_equals_instruction
     }
 
 
@@ -68,10 +112,17 @@ def run_program(program, input):
 
 
 def part1(program):
+    program = program.copy()
     outputs = run_program(program, 1)
-    print(outputs)
     answer = outputs[-1]
     print(f"part 1 answer: {answer}")
+
+
+def part2(program):
+    program = program.copy()
+    outputs = run_program(program, 5)
+    answer = outputs[-1]
+    print(f"part 2 answer: {answer}")
 
 
 if __name__ == "__main__":
@@ -79,3 +130,4 @@ if __name__ == "__main__":
         line = f.read()
         program = [int(s) for s in line.split(',')]
         part1(program)
+        part2(program)
