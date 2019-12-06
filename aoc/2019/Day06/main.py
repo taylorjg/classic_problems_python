@@ -1,8 +1,14 @@
+from generic_search import bfs, node_to_path
+from functools import partial
+
 COM = "COM"
 
 
 def get_orbit_count(nodes, name, count=0):
-    return count if name == COM else get_orbit_count(nodes, nodes[name], count + 1)
+    if name == COM:
+        return count
+    else:
+        return get_orbit_count(nodes, nodes[name], count + 1)
 
 
 def part1(nodes):
@@ -10,8 +16,18 @@ def part1(nodes):
     print(f"part 1 answer: {answer}")
 
 
+def successors(nodes, name):
+    objects_orbiting_this_object = [k for k, v in nodes.items() if v == name]
+    objects_orbited_by_this_object = [] if name == COM else [nodes[name]]
+    return objects_orbiting_this_object + objects_orbited_by_this_object
+
+
 def part2(nodes):
-    print(f"part 2 answer: {0}")
+    start = nodes["YOU"]
+    goal = nodes["SAN"]
+    node = bfs(start, lambda name: name == goal, partial(successors, nodes))
+    path = node_to_path(node)
+    print(f"part 2 answer: {len(path) - 1}")
 
 
 if __name__ == "__main__":
