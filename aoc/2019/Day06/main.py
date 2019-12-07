@@ -1,4 +1,8 @@
-from generic_search import bfs, node_to_path
+import sys
+
+sys.path.insert(0, '.')
+
+from book.chapter2.generic_search import bfs, node_to_path
 from functools import partial
 
 COM = "COM"
