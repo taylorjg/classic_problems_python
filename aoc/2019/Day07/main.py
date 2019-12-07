@@ -93,6 +93,24 @@ def run_program(program, inputs):
     return outputs
 
 
+def continue_program_until_output(program, pos, inputs):
+    outputs = []
+    intcode_dict = make_intcode_dict(inputs, outputs)
+    halted = False
+    while True:
+        instruction = program[pos]
+        opcode, modes = decode_instruction(instruction)
+        if opcode == Opcodes.HALT:
+            halted = True
+            break
+        fn = intcode_dict[opcode]
+        pos = fn(program, pos, modes)
+        if opcode == Opcodes.OUTPUT:
+            break
+    output = None if halted else outputs[0]
+    return pos, halted, output
+
+
 def run_amplifier(program, setting, input):
     program = program.copy()
     outputs = run_program(program, [setting, input])
@@ -108,9 +126,43 @@ def try_phase_settings(program, settings):
     return e
 
 
-def find_best_thruster_signal(program):
+def find_best_thruster_signal_part1(program):
     perms = permutations(range(5), 5)
     outputs = [try_phase_settings(program, perm) for perm in perms]
+    return sorted(outputs, reverse=True)[0]
+
+
+def try_phase_settings_with_feedback(program, settings):
+    programs = [program.copy() for _ in range(5)]
+    poss = [0] * 5
+    inputss = [[setting] for setting in settings]
+    e = 0
+
+    while True:
+        inputss[0].append(e)
+        pos0, halted0, a = continue_program_until_output(programs[0], poss[0], inputss[0])
+        if halted0:
+            break
+        poss[0] = pos0
+        inputss[1].append(a)
+        pos1, halted1, b = continue_program_until_output(programs[1], poss[1], inputss[1])
+        poss[1] = pos1
+        inputss[2].append(b)
+        pos2, halted2, c = continue_program_until_output(programs[2], poss[2], inputss[2])
+        poss[2] = pos2
+        inputss[3].append(c)
+        pos3, halted3, d = continue_program_until_output(programs[3], poss[3], inputss[3])
+        poss[3] = pos3
+        inputss[4].append(d)
+        pos4, halted4, e = continue_program_until_output(programs[4], poss[4], inputss[4])
+        poss[4] = pos4
+
+    return e
+
+
+def find_best_thruster_signal_part2(program):
+    perms = permutations(range(5, 10), 5)
+    outputs = [try_phase_settings_with_feedback(program, perm) for perm in perms]
     return sorted(outputs, reverse=True)[0]
 
 
@@ -121,7 +173,7 @@ def make_program(program_source):
 def part1_tests():
     def part1_test(program_source):
         program = make_program(program_source)
-        print(f"best thruster signal: {find_best_thruster_signal(program)}")
+        print(f"best thruster signal: {find_best_thruster_signal_part1(program)}")
 
     program_source_1 = "3,15,3,16,1002,16,10,16,1,16,15,15,4,15,99,0,0"
     program_source_2 = "3,23,3,24,1002,24,10,24,1002,23,-1,23,101,5,23,23,1,24,23,23,4,23,99,0,0"
@@ -132,12 +184,30 @@ def part1_tests():
 
 
 def part1(program):
-    answer = find_best_thruster_signal(program)
+    answer = find_best_thruster_signal_part1(program)
     print(f"part 1 answer: {answer}")
+
+
+def part2_tests():
+    def part2_test(program_source):
+        program = make_program(program_source)
+        print(f"best thruster signal: {find_best_thruster_signal_part2(program)}")
+
+    program_source_1 = "3,26,1001,26,-4,26,3,27,1002,27,2,27,1,27,26,27,4,27,1001,28,-1,28,1005,28,6,99,0,0,5"
+    program_source_2 = "3,52,1001,52,-5,52,3,53,1,52,56,54,1007,54,5,55,1005,55,26,1001,54,-5,54,1105,1,12,1,53,54,53,1008,54,0,55,1001,55,1,55,2,53,55,53,4,53,1001,56,-1,56,1005,56,6,99,0,0,0,0,10"
+    part2_test(program_source_1)
+    part2_test(program_source_2)
+
+
+def part2(program):
+    answer = find_best_thruster_signal_part2(program)
+    print(f"part 2 answer: {answer}")
 
 
 if __name__ == "__main__":
     part1_tests()
+    part2_tests()
     with open("aoc/2019/Day07/input.txt") as f:
         program = make_program(f.read())
         part1(program)
+        part2(program)
