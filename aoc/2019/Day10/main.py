@@ -1,3 +1,5 @@
+import math
+
 # From Beautiful Code, Page 549
 # (defun area-collinear (px py qx qy rx ry)
 #   (= (* (- px rx) (- qy ry))
@@ -46,7 +48,9 @@ def get_asteroid_counts(asteroid_pts, source):
     return source, len(detected)
 
 
-def find_asteroid_pts(lines, width, height):
+def find_asteroid_pts(lines):
+    width = len(lines[0])
+    height = len(lines)
     asteroid_pts = []
     for y in range(height):
         for x in range(width):
@@ -55,30 +59,57 @@ def find_asteroid_pts(lines, width, height):
     return asteroid_pts
 
 
-def part1(lines):
-    width = len(lines[0])
-    height = len(lines)
-    asteroid_pts = find_asteroid_pts(lines, width, height)
+def part1(asteroid_pts):
     counts = [get_asteroid_counts(asteroid_pts, asteroid_pt) for asteroid_pt in asteroid_pts]
-    print(counts)
     sorted_counts = sorted(counts, key=lambda t: t[1], reverse=True)
-    print(sorted_counts)
     answer = sorted_counts[0][1]
     print(f"part 1 answer: {answer}")
 
 
+def part2(asteroid_pts):
+    counts = [get_asteroid_counts(asteroid_pts, asteroid_pt) for asteroid_pt in asteroid_pts]
+    sorted_counts = sorted(counts, key=lambda t: t[1], reverse=True)
+    station = sorted_counts[0][0]
+    sx, sy = station
+
+    # We want something a bit like Polar coordinates but
+    # going clockwise instead of counterclockwise and
+    # with 0 degrees pointing North instead of East. Also, we
+    # need to take account of the Y axis increasing downwards.
+    def pt_angle(pt):
+        px, py = pt
+        x = px - sx
+        y = sy - py
+        angle1 = math.degrees(math.atan2(y, x))
+        angle2 = angle1 + 360 if angle1 < 0 else angle1
+        angle3 = (360 - angle2 + 90) % 360
+        return angle3
+
+    def pt_distance(pt):
+        px, py = pt
+        x = px - sx
+        y = sy - py
+        return x * x + y * y
+
+    pt_data = sorted([(pt_angle(pt), pt_distance(pt), pt) for pt in asteroid_pts], key=lambda t: (t[0], t[1]))
+
+    vaporised = []
+    while len(pt_data):
+        angle, distance, pt = pt_data.pop(0)
+        vaporised.append(pt)
+        # move asteroids with the same angle to the end of the list
+        ts = [t for t in pt_data if t[0] == angle]
+        for t in ts:
+            pt_data.pop(0)
+            pt_data.append(t)
+    x, y = vaporised[199]
+    answer = x * 100 + y
+    print(f"part 2 answer: {answer}")
+
+
 if __name__ == "__main__":
-#     data = """
-# .#..#
-# .....
-# #####
-# ....#
-# ...##
-# """
-#     lines1 = [line.rstrip() for line in data.split("\n")]
-#     lines2 = [line for line in lines1 if len(line) > 0]
-#     print(lines2)
-#     part1(lines2)
     with open("aoc/2019/Day10/input.txt") as f:
         lines = [line.rstrip() for line in f.readlines()]
-        part1(lines)
+        asteroid_pts = find_asteroid_pts(lines)
+        part1(asteroid_pts)
+        part2(asteroid_pts)
