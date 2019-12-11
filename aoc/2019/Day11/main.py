@@ -150,7 +150,24 @@ def move(pos, direction, turn):
         return ((x, y - 1), "U") if turn == 0 else ((x, y + 1), "D")
 
 
-def part1(values):
+def draw_panels(colours):
+    coords = list(colours.keys())
+    xs = [t[0] for t in coords]
+    ys = [t[1] for t in coords]
+    minx = min(xs)
+    maxx = max(xs)
+    miny = min(ys)
+    maxy = max(ys)
+    for y in range(miny, maxy + 1):
+        row = ""
+        for x in range(minx, maxx + 1):
+            colour = colours[(x, y)]
+            ch = "." if colour == 1 else " "
+            row = row + ch
+        print(row)
+
+
+def paint_panels(values, is_part2):
     program = Program(values)
     pos = 0, 0
     direction = "U"
@@ -159,7 +176,8 @@ def part1(values):
     locations_painted = set()
     while True:
         old_pos = pos
-        outputs, halted = run_program_until_two_outputs(program, colours[old_pos])
+        panel_colour = 1 if moves == 0 and is_part2 else colours[old_pos]
+        outputs, halted = run_program_until_two_outputs(program, panel_colour)
         if halted:
             break
         [colour, turn] = outputs
@@ -168,11 +186,16 @@ def part1(values):
         locations_painted.add(old_pos)
         moves = moves + 1
     answer = len(locations_painted)
-    print(f"part 1 answer: {answer}")
+    if is_part2:
+        print("part 2 answer:")
+        draw_panels(colours)
+    else:
+        print(f"part 1 answer: {answer}")
 
 
 if __name__ == "__main__":
     with open("aoc/2019/Day11/input.txt") as f:
         line = f.read()
         values = [int(s) for s in line.split(',')]
-        part1(values)
+        paint_panels(values, False)
+        paint_panels(values, True)
