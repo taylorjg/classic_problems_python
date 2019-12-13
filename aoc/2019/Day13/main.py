@@ -182,16 +182,10 @@ SCREEN_CHARS = {
 
 def read_initial_screen(program):
     screen = {}
-    paddle_pos = None
-    ball_pos = None
     for _ in range(SCREEN_WIDTH * SCREEN_HEIGHT):
         [x, y, tile_id] = run_program_until_next_instruction(program, 0)
         screen[x, y] = SCREEN_CHARS[tile_id]
-        if tile_id == PADDLE_TILE_ID:
-            paddle_pos = x, y
-        if tile_id == BALL_TILE_ID:
-            ball_pos = x, y
-    return screen, paddle_pos, ball_pos
+    return screen
 
 
 def draw_screen(screen):
@@ -199,6 +193,12 @@ def draw_screen(screen):
         row = [screen[x, y] for x in range(SCREEN_WIDTH)]
         print("".join(row))
     print()
+
+
+def calc_joystick_tilt(ball_pos_x, paddle_pos_x):
+    if ball_pos_x > paddle_pos_x: return +1
+    if ball_pos_x < paddle_pos_x: return -1
+    return 0
 
 
 def part1(values):
@@ -213,10 +213,12 @@ def part1(values):
 def part2(values):
     values[0] = 2
     program = Program(values)
-    screen, paddle_pos, ball_pos = read_initial_screen(program)
-    current_score = None
+    screen = read_initial_screen(program)
+    # draw_screen(screen)
+    ball_pos_x = 0
+    paddle_pos_x = 0
+    current_score = 0
     joystick_tilt = 0
-    draw_screen(screen)
     while True:
         instruction = run_program_until_next_instruction(program, joystick_tilt)
         if instruction is None: break
@@ -225,16 +227,12 @@ def part2(values):
             current_score = tile_id
             continue
         screen[x, y] = SCREEN_CHARS[tile_id]
-        if (x, y) == paddle_pos and tile_id == EMPTY_TILE_ID:
-            continue
-        if (x, y) == ball_pos and tile_id == EMPTY_TILE_ID:
-            continue
-        if tile_id == PADDLE_TILE_ID:
-            paddle_pos = x, y
-        if tile_id == BALL_TILE_ID:
-            ball_pos = x, y
-        draw_screen(screen)
-        # TODO: keep the ball in the air by adjusting the joystick tilt
+        if tile_id == EMPTY_TILE_ID: continue
+        if tile_id == BALL_TILE_ID: ball_pos_x = x
+        if tile_id == PADDLE_TILE_ID: paddle_pos_x = x
+        # draw_screen(screen)
+        joystick_tilt = calc_joystick_tilt(ball_pos_x, paddle_pos_x)
+    # draw_screen(screen)
     print(f"part 2 answer: {current_score}")
 
 
