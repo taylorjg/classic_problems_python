@@ -1,6 +1,7 @@
 from functools import partial
 from enum import Enum
 from collections import defaultdict
+from itertools import groupby, chain
 
 
 class Opcodes(Enum):
@@ -76,8 +77,8 @@ def execute_arithmetic_instruction(op, program, modes):
     return program.pos + 4
 
 
-def execute_save_instruction(input, program, modes):
-    program.set_param(modes, 1, input)
+def execute_save_instruction(inputs, program, modes):
+    program.set_param(modes, 1, inputs.pop(0))
     return program.pos + 2
 
 
@@ -107,11 +108,11 @@ def execute_adjust_rel_instruction(program, modes):
     return program.pos + 2
 
 
-def make_intcode_dict(input, outputs):
+def make_intcode_dict(inputs, outputs):
     return {
         Opcodes.ADD: partial(execute_arithmetic_instruction, lambda a, b: a + b),
         Opcodes.MULTIPLY: partial(execute_arithmetic_instruction, lambda a, b: a * b),
-        Opcodes.SAVE: partial(execute_save_instruction, input),
+        Opcodes.SAVE: partial(execute_save_instruction, inputs),
         Opcodes.OUTPUT: partial(execute_output_instruction, outputs),
         Opcodes.JUMP_IF_TRUE: partial(execute_jump_instruction, lambda a: a),
         Opcodes.JUMP_IF_FALSE: partial(execute_jump_instruction, lambda a: not a),
@@ -121,9 +122,9 @@ def make_intcode_dict(input, outputs):
     }
 
 
-def run_program(program, input):
+def run_program(program, inputs):
     outputs = []
-    intcode_dict = make_intcode_dict(input, outputs)
+    intcode_dict = make_intcode_dict(inputs, outputs)
     while True:
         instruction = program.get_current_instruction()
         opcode, modes = decode_instruction(instruction)
@@ -198,6 +199,7 @@ def follow_path(grid, start):
     current_dir = None
     current_pos = start
     pos_dict = defaultdict(int)
+    directions = []
     while True:
         next_dir_pos = None
         if current_dir is not None:
@@ -207,13 +209,19 @@ def follow_path(grid, start):
         if next_dir_pos is None:
             break
         current_dir, current_pos = next_dir_pos
+        directions.append(current_dir)
         pos_dict[current_pos] += 1
+    print("".join(directions))
+    v1 = groupby(directions)
+    v2 = [(k, len(list(v))) for k, v in v1]
+    for v3 in v2:
+        print(v3)
     return pos_dict
 
 
 def part1(values):
     program = Program(values)
-    outputs = run_program(program, 0)
+    outputs = run_program(program, [])
     s = "".join([chr(code) for code in outputs])
     rows = s.split('\n')
     grid = [row for row in rows if len(row) > 0]
@@ -225,8 +233,31 @@ def part1(values):
     print(f"part 1 answer: {answer}")
 
 
+def make_inputs():
+    fn_main = "A,B,C,B,A,C"
+    fn_a = "R,8,R,8"
+    fn_b = "R,4,R,4,R,8"
+    fn_c = "L,6,L,2"
+    yes_no = "n"
+    s = "\n".join([fn_main, fn_a, fn_b, fn_c, yes_no]) + "\n"
+    return [ord(ch) for ch in s]
+
+
+def part2(values):
+    values[0] = 2
+    program = Program(values)
+    inputs = make_inputs()
+    outputs = run_program(program, inputs)
+    s = "".join([chr(code) for code in outputs])
+    rows = s.split('\n')
+    grid = [row for row in rows if len(row) > 0]
+    for row in grid: print(row)
+    print(f"part 2 answer: {0}")
+
+
 if __name__ == "__main__":
     with open("aoc/2019/Day17/input.txt") as f:
         line = f.read()
         values = [int(s) for s in line.split(',')]
-        part1(values)
+        # part1(values)
+        part2(values)
