@@ -1,7 +1,7 @@
 from functools import partial
 from enum import Enum
 from collections import defaultdict
-from itertools import groupby, chain
+import math
 
 
 class Opcodes(Enum):
@@ -145,16 +145,79 @@ def split_list_every(xs, n):
 
 def part1(values):
     outputs = []
-    size = 55
-    for y in range(size):
-        for x in range(size):
+    start_row = 1000
+    end_row = 1010
+    width = end_row
+    row_range = range(start_row, end_row)
+    for y in row_range:
+        for x in range(width):
             program = Program(values)
             outputs += run_program(program, [x, y])
 
     chars = [("#" if output == 1 else ".") for output in outputs]
-    rows = split_list_every(chars, size)
+    rows = list(split_list_every(chars, width))
     for row in rows:
         print("".join(row))
+
+    # print()
+    # last_row = "".join(rows[-1])
+    # x1 = last_row.find("#")
+    # x2 = last_row.rfind("#")
+    # print(f"x1: {x1}; x2: {x2}")
+    # a1 = math.atan(x1 / end_row)
+    # a2 = math.atan(x2 / end_row)
+    # print(f"a1: {a1} ({math.degrees(a1)}); a2: {a2} ({math.degrees(a2)})")
+    # print()
+
+    # a1: 0.5404195002705842 (30.96375653207352);
+    # a2: 0.6107259643892086 (34.99202019855866)
+    # a1 = 0.5404195002705842
+    # a2 = 0.6107259643892086
+
+    # a1 = 0.583373006993856  # (33.424811182603804)
+    # a2 = 0.6747409422235527  # (38.659808254090095)
+
+    # calculated from the 1000th row:
+    # a1 = 0.583373006993856  # (33.424811182603804)
+    # a2 = 0.6957210768630759  # (39.861881422551)
+    a1 = 0.583373006993856  # (33.424811182603804)
+    a2 = 0.6957210768630759  # (39.861881422551)
+    # a1 = math.radians(33.4)
+    # a2 = math.radians(39.8)
+
+    print()
+
+    for y in row_range:
+        if y == 0:
+            # idx1 = 0
+            # idx2 = 1
+            v1 = 0
+            v2 = 0
+        else:
+            # idx1 = my_round_1((y + 1) * math.tan(a1))
+            # idx2 = my_round_2((y + 1) * math.tan(a2))
+            v1 = (y + 1) * math.tan(a1)
+            v2 = (y + 1) * math.tan(a2)
+            # idx1 = int(v1)
+            # idx2 = idx1 + round(v2 - v1)
+        s = None
+        e = None
+        row = "".join(rows[y - start_row])
+        if "#" in row:
+            s = row.find("#")
+            e = row.rfind("#")
+        diff = round(v2 - v1, 2)
+        mid = round((v1 + v2) / 2, 2)
+        if y != 0 and diff < 0.4:
+            v1 = None
+            v2 = None
+        else:
+            v1 = round(v1)
+            v2 = round(v2)
+        print(f"y: {y}; s: {s}; e: {e}; v1: {v1}; v2: {v2}; diff: {diff}; mid: {mid}")
+        # row2 = ("." * idx1) + ("#" * (idx2 - idx1 + 1)) + ("." * (size - idx2 - 1))
+        # row2 = ("." * idx1) + ("#" * (idx2 - idx1)) + ("." * (size - idx2 - 1))
+        # print(row2)
 
     answer = outputs.count(1)
     print(f"part 1 answer: {answer}")

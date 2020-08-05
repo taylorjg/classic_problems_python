@@ -1,96 +1,36 @@
-from collections import defaultdict
+from itertools import chain, cycle
+
+BASE_PATTERN = [0, 1, 0, -1]
 
 
-class ChemicalQuantity:
-    def __init__(self, chemical, quantity):
-        self.chemical = chemical
-        self.quantity = quantity
-
-    def __str__(self):
-        return f"{self.quantity} {self.chemical}"
-
-
-class Reaction:
-    def __init__(self, input_chemicals, output_chemical):
-        self.input_chemicals = input_chemicals
-        self.output_chemical = output_chemical
-
-    def __str__(self):
-        ics = [str(ic) for ic in self.input_chemicals]
-        return f"{', '.join(ics)} => {self.output_chemical}"
+def get_pattern_cycle(one_based_position):
+    one_cycle = chain(*[[v] * one_based_position for v in BASE_PATTERN])
+    for idx, value in enumerate(cycle(one_cycle)):
+        if idx == 0:
+            continue
+        yield value
 
 
-# def need(reactions_dict, totals, chemical, quantity):
-#     if chemical == "ORE": return
-#     totals[chemical] += quantity
-#     reaction = reactions_dict[chemical]
-#     for input_chemical in reaction.input_chemicals:
-#         c = input_chemical.chemical
-#         q = input_chemical.quantity
-#         need(reactions_dict, totals, c, q * quantity)
+def calc_digit(signal, idx):
+    pattern_cycle = get_pattern_cycle(idx + 1)
+    pairs = zip(signal, pattern_cycle)
+    total = sum([a * b for a, b in pairs])
+    return int(str(total)[-1])
 
 
-# def apply_rounding(reactions_dict, totals):
-#     for c, q in totals.items():
-#         reaction = reactions_dict[c]
-#         oq = reaction.output_chemical.quantity
-#         totals[c] = ((q + oq - 1) // oq) * oq
+def apply_phase(signal):
+    for idx in range(len(signal)):
+        signal[idx] = calc_digit(signal, idx)
 
 
-# def expand_ores(reactions_dict, totals):
-#     totals["ORE"] = 0
-#     for c, q in totals.items():
-#         if c == "ORE": continue
-#         reaction = reactions_dict[c]
-#         if len(reaction.input_chemicals) == 1:
-#             ic = reaction.input_chemicals[0]
-#             oc = reaction.output_chemical
-#             if ic.chemical == "ORE":
-#                 totals["ORE"] += (q // oc.quantity * ic.quantity)
-
-def build_tree(reactions_dict, ores, root_node):
-    for ic in root_node[1]:
-        if ic.chemical == "ORE":
-            ores.append(root_node[0])
-        else:
-            reaction = reactions_dict[ic.chemical]
-            node = reaction.output_chemical, reaction.input_chemicals, []
-            root_node[2].append(node)
-            build_tree(reactions_dict, ores, node)
-
-
-def part1(reactions):
-    reactions_dict = {reaction.output_chemical.chemical: reaction for reaction in reactions}
-    # totals = defaultdict(int)
-    # need(reactions_dict, totals, "FUEL", 1)
-    # apply_rounding(reactions_dict, totals)
-    # expand_ores(reactions_dict, totals)
-    # print(totals)
-    ores = []
-    reaction = reactions_dict["FUEL"]
-    node = reaction.output_chemical, reaction.input_chemicals, []
-    build_tree(reactions_dict, ores, node)
-    for ore in ores:
-        print(ore)
-    # print(node)
-    print(f"part 1 answer: {0}")
-
-
-def parse_chemical_quantity(s):
-    [q, c] = s.strip().split(" ")
-    return ChemicalQuantity(c, int(q))
-
-
-def parse_line(line):
-    [left_str, out_str] = line.split("=>")
-    in_strs = left_str.split(",")
-    input_chemicals = [parse_chemical_quantity(in_str) for in_str in in_strs]
-    output_chemical = parse_chemical_quantity(out_str)
-    return Reaction(input_chemicals, output_chemical)
+def part1(signal_str):
+    signal = [int(ch) for ch in signal_str.rstrip()]
+    for _ in range(100):
+        apply_phase(signal)
+    answer = "".join([str(digit) for digit in signal[:8]])
+    print(f"part 1 answer: {answer}")
 
 
 if __name__ == "__main__":
-    with open("aoc/2019/Day14/test3.txt") as f:
-        lines = f.readlines()
-        reactions = [parse_line(line) for line in lines]
-        part1(reactions)
+    with open("aoc/2019/Day16/input.txt") as f:
+        part1(f.read())
